@@ -15,13 +15,13 @@ public class FormInstruktur extends JFrame {
     private DefaultTableModel model;
 
     public FormInstruktur() {
-        setTitle("Form Data Instruktur Gym");
+        setTitle("Form Data Instruktur Gym - PostgreSQL");
         setSize(760, 540);
         setLayout(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // ============================= LABEL =============================
-        JLabel lblId = new JLabel("ID Instruktur (Auto)");
+        JLabel lblId = new JLabel("ID Instruktur");
         JLabel lblNama = new JLabel("Nama");
         JLabel lblUsia = new JLabel("Usia");
         JLabel lblKeahlian = new JLabel("Keahlian");
@@ -76,7 +76,7 @@ public class FormInstruktur extends JFrame {
         model = new DefaultTableModel(new String[]{"ID", "Nama", "Usia", "Keahlian", "No Telp"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // membuat tabel tidak bisa diedit langsung
+                return false;
             }
         };
 
@@ -88,7 +88,6 @@ public class FormInstruktur extends JFrame {
         // ============================= KONEKSI & LOAD =============================
         koneksiDB();
         tampilData();
-        autoID();
 
         // ============================= EVENT =============================
         btnSimpan.addActionListener(e -> simpanData());
@@ -102,29 +101,17 @@ public class FormInstruktur extends JFrame {
     }
 
     // ========================================================================
-    // KONEKSI DATABASE
+    // KONEKSI POSTGRESQL
     // ========================================================================
     public void koneksiDB() {
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:5432/relasi_gym", "postgres", "12345");
+            conn = DriverManager.getConnection(
+                "jdbc:postgresql://localhost:5432/relasi_gym",
+                "postgres",
+                "12345" 
+            );
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Koneksi Gagal: " + e.getMessage());
-        }
-    }
-
-    // ========================================================================
-    // AUTO GENERATE ID
-    // ========================================================================
-    public void autoID() {
-        try {
-            pst = conn.prepareStatement("SELECT MAX(id_instruktur) FROM instruktur_gym");
-            rs = pst.executeQuery();
-            if (rs.next()) {
-                int id = rs.getInt(1) + 1;
-                txtId.setText(String.valueOf(id));
-            }
-        } catch (Exception e) {
-            txtId.setText("1");
         }
     }
 
@@ -138,15 +125,15 @@ public class FormInstruktur extends JFrame {
             rs = pst.executeQuery();
             while (rs.next()) {
                 model.addRow(new Object[]{
-                        rs.getInt("id_instruktur"),
-                        rs.getString("nama"),
-                        rs.getInt("usia"),
-                        rs.getString("keahlian"),
-                        rs.getString("no_telp")
+                    rs.getInt("id_instruktur"),
+                    rs.getString("nama"),
+                    rs.getInt("usia"),
+                    rs.getString("keahlian"),
+                    rs.getString("no_telp")
                 });
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Gagal Tampil: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Gagal Tampil: " + e.getMessage());
         }
     }
 
@@ -159,25 +146,21 @@ public class FormInstruktur extends JFrame {
             JOptionPane.showMessageDialog(this, "Nama dan Usia wajib diisi!");
             return;
         }
+
         if (!txtUsia.getText().matches("\\d+")) {
             JOptionPane.showMessageDialog(this, "Usia harus angka!");
-            return;
-        }
-        if (!txtTelp.getText().matches("\\d*")) {
-            JOptionPane.showMessageDialog(this, "No Telepon harus angka!");
             return;
         }
 
         try {
             pst = conn.prepareStatement(
-                    "INSERT INTO instruktur_gym (id_instruktur, nama, usia, keahlian, no_telp) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO instruktur_gym (nama, usia, keahlian, no_telp) VALUES (?, ?, ?, ?)"
             );
 
-            pst.setInt(1, Integer.parseInt(txtId.getText()));
-            pst.setString(2, txtNama.getText());
-            pst.setInt(3, Integer.parseInt(txtUsia.getText()));
-            pst.setString(4, txtKeahlian.getText());
-            pst.setString(5, txtTelp.getText());
+            pst.setString(1, txtNama.getText());
+            pst.setInt(2, Integer.parseInt(txtUsia.getText()));
+            pst.setString(3, txtKeahlian.getText());
+            pst.setString(4, txtTelp.getText());
             pst.executeUpdate();
 
             JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
@@ -193,20 +176,14 @@ public class FormInstruktur extends JFrame {
     // UPDATE DATA
     // ========================================================================
     public void updateData() {
-
         if (txtId.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Pilih data terlebih dahulu!");
-            return;
-        }
-
-        if (!txtUsia.getText().matches("\\d+")) {
-            JOptionPane.showMessageDialog(this, "Usia harus angka!");
+            JOptionPane.showMessageDialog(this, "Pilih data dari tabel!");
             return;
         }
 
         try {
             pst = conn.prepareStatement(
-                    "UPDATE instruktur_gym SET nama=?, usia=?, keahlian=?, no_telp=? WHERE id_instruktur=?"
+                "UPDATE instruktur_gym SET nama=?, usia=?, keahlian=?, no_telp=? WHERE id_instruktur=?"
             );
 
             pst.setString(1, txtNama.getText());
@@ -230,9 +207,8 @@ public class FormInstruktur extends JFrame {
     // DELETE DATA
     // ========================================================================
     public void deleteData() {
-
         if (txtId.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Pilih data dari tabel!");
+            JOptionPane.showMessageDialog(this, "Pilih data terlebih dahulu!");
             return;
         }
 
@@ -255,18 +231,19 @@ public class FormInstruktur extends JFrame {
     // ========================================================================
     public void cariData() {
         model.setRowCount(0);
-        try {
-            pst = conn.prepareStatement("SELECT * FROM instruktur_gym WHERE nama LIKE ?");
-            pst.setString(1, "%" + txtCari.getText() + "%");
 
+        try {
+            pst = conn.prepareStatement("SELECT * FROM instruktur_gym WHERE nama ILIKE ?");
+            pst.setString(1, "%" + txtCari.getText() + "%");
             rs = pst.executeQuery();
+
             while (rs.next()) {
                 model.addRow(new Object[]{
-                        rs.getInt("id_instruktur"),
-                        rs.getString("nama"),
-                        rs.getInt("usia"),
-                        rs.getString("keahlian"),
-                        rs.getString("no_telp")
+                    rs.getInt("id_instruktur"),
+                    rs.getString("nama"),
+                    rs.getInt("usia"),
+                    rs.getString("keahlian"),
+                    rs.getString("no_telp")
                 });
             }
 
@@ -276,19 +253,19 @@ public class FormInstruktur extends JFrame {
     }
 
     // ========================================================================
-    // RESET
+    // RESET FORM
     // ========================================================================
     public void resetForm() {
+        txtId.setText("");
         txtNama.setText("");
         txtUsia.setText("");
         txtKeahlian.setText("");
         txtTelp.setText("");
         txtCari.setText("");
-        autoID();
     }
 
     // ========================================================================
-    // PILIH TABEL
+    // KLIK TABEL
     // ========================================================================
     public void tableKlik() {
         int row = table.getSelectedRow();
