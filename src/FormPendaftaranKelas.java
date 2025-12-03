@@ -7,7 +7,7 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.awt.Color; // <-- PERBAIKAN 1: Menambahkan import untuk Color
-import java.awt.Component; // <-- PERBAIKAN 2: Menambahkan import yang dibutuhkan oleh Component
+import java.awt.Component; 
 
 public class FormPendaftaranKelas extends JFrame {
 
@@ -62,6 +62,7 @@ public class FormPendaftaranKelas extends JFrame {
         setSize(900, 600);
         setLayout(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE); 
+        setLocationRelativeTo(null);
         koneksiDB(); // Hubungkan ke DB saat form dibuat
 
         // --- 2. Inisialisasi Komponen Input ---

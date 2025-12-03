@@ -7,30 +7,25 @@ import java.sql.*;
 
 public class FormJadwalKelas extends JFrame {
 
-    // Koneksi database
     Connection conn;
     PreparedStatement pst;
     ResultSet rs;
 
-    // Komponen tabel
     JTable table;
     DefaultTableModel model;
 
-    // Komponen input
     JTextField txtID, txtNama, txtJam;
     JComboBox<String> cbHari, cbInstruktur;
 
-    // Tombol
     JButton btnTambah, btnUpdate, btnHapus, btnClear;
 
-    // Validasi format jam HH:mm
     public static boolean validJam(String jam) {
         return jam.matches("\\d{2}:\\d{2}");
     }
 
     public FormJadwalKelas() {
 
-        // Membuka koneksi ke PostgreSQL
+        // Koneksi
         try {
             conn = DriverManager.getConnection(
                     "jdbc:postgresql://localhost:5432/relasi_gym",
@@ -41,57 +36,102 @@ public class FormJadwalKelas extends JFrame {
             JOptionPane.showMessageDialog(this, "Koneksi gagal: " + e.getMessage());
         }
 
-        // Setting utama JFrame
+        // Setting Frame
         setTitle("Form Jadwal Kelas Gym");
-        setSize(800, 500);
-        setLayout(new BorderLayout());
+        setSize(900, 600);
+        setLayout(new BorderLayout(10, 10));
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        // Panel Input (Form)
-        JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
+        // ===========================================================
+        // PANEL INPUT (FORM)
+        // ===========================================================
 
-        // Input ID kelas (otomatis dan tidak bisa diedit)
-        panel.add(new JLabel("ID Kelas:"));
-        txtID = new JTextField();
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.insets = new Insets(6, 6, 6, 6);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Row 1 - ID
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("ID Kelas:"), gbc);
+
+        gbc.gridx = 1;
+        txtID = new JTextField(20);
         txtID.setEditable(false);
-        panel.add(txtID);
+        panel.add(txtID, gbc);
 
-        // Input nama kelas
-        panel.add(new JLabel("Nama Kelas:"));
-        txtNama = new JTextField();
-        panel.add(txtNama);
+        // Row 2 - Nama Kelas
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Nama Kelas:"), gbc);
 
-        // Dropdown pilihan hari
-        panel.add(new JLabel("Hari:"));
+        gbc.gridx = 1;
+        txtNama = new JTextField(20);
+        panel.add(txtNama, gbc);
+
+        // Row 3 - Hari
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(new JLabel("Hari:"), gbc);
+
+        gbc.gridx = 1;
         cbHari = new JComboBox<>(new String[]{
-                "Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"});
-        panel.add(cbHari);
+                "Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"
+        });
+        cbHari.setPreferredSize(new Dimension(200, 25));
+        panel.add(cbHari, gbc);
 
-        // Input jam
-        panel.add(new JLabel("Jam (HH:mm):"));
-        txtJam = new JTextField();
-        panel.add(txtJam);
+        // Row 4 - Jam
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(new JLabel("Jam (HH:mm):"), gbc);
 
-        // Dropdown daftar instruktur diambil dari database
-        panel.add(new JLabel("Instruktur:"));
+        gbc.gridx = 1;
+        txtJam = new JTextField(20);
+        panel.add(txtJam, gbc);
+
+        // Row 5 - Instruktur
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(new JLabel("Instruktur:"), gbc);
+
+        gbc.gridx = 1;
         cbInstruktur = new JComboBox<>();
-        panel.add(cbInstruktur);
+        cbInstruktur.setPreferredSize(new Dimension(200, 25));
+        panel.add(cbInstruktur, gbc);
 
         add(panel, BorderLayout.NORTH);
 
-        // Tabel untuk menampilkan data jadwal kelas
-        model = new DefaultTableModel(
-                new String[]{"ID", "Nama Kelas", "Hari", "Jam", "Instruktur"}, 0);
-        table = new JTable(model);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        // ===========================================================
+        // TABEL DATA
+        // ===========================================================
 
-        // Panel tombol aksi CRUD
+        model = new DefaultTableModel(
+                new String[]{"ID", "Nama Kelas", "Hari", "Jam", "Instruktur"}, 0
+        );
+
+        table = new JTable(model);
+        table.setRowHeight(22);
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
+        add(scroll, BorderLayout.CENTER);
+
+        // ===========================================================
+        // PANEL TOMBOL CRUD
+        // ===========================================================
+
         JPanel panelBtn = new JPanel();
+        panelBtn.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         btnTambah = new JButton("Tambah");
         btnUpdate = new JButton("Update");
         btnHapus = new JButton("Hapus");
         btnClear = new JButton("Clear");
+
+        btnTambah.setPreferredSize(new Dimension(120, 30));
+        btnUpdate.setPreferredSize(new Dimension(120, 30));
+        btnHapus.setPreferredSize(new Dimension(120, 30));
+        btnClear.setPreferredSize(new Dimension(120, 30));
 
         panelBtn.add(btnTambah);
         panelBtn.add(btnUpdate);
@@ -100,69 +140,69 @@ public class FormJadwalKelas extends JFrame {
 
         add(panelBtn, BorderLayout.SOUTH);
 
-        // Load data awal
+        // Load data
         loadInstruktur();
         tampilData();
         generateID();
 
-        // Event listener tombol CRUD
+        // Event CRUD
         btnTambah.addActionListener(e -> simpanData());
         btnUpdate.addActionListener(e -> updateData());
         btnHapus.addActionListener(e -> hapusData());
         btnClear.addActionListener(e -> resetForm());
 
-        // Listener saat memilih baris di tabel
         table.getSelectionModel().addListSelectionListener(e -> isiForm());
     }
 
-    // Mengambil ID instruktur dari pilihan combo (format: "id - nama")
+    // ========================= DATABASE FUNCTIONS =============================
+
     public int getSelectedInstrukturID() {
         return Integer.parseInt(cbInstruktur.getSelectedItem().toString().split(" - ")[0]);
     }
 
-    // Mengambil daftar instruktur dari database
     public void loadInstruktur() {
         try {
             pst = conn.prepareStatement(
-                    "SELECT id_instruktur, nama FROM instruktur_gym ORDER BY nama");
+                "SELECT id_instruktur, nama FROM instruktur_gym ORDER BY nama"
+            );
             rs = pst.executeQuery();
+
             while (rs.next()) {
-                cbInstruktur.addItem(rs.getString("id_instruktur")
-                        + " - " + rs.getString("nama"));
+                cbInstruktur.addItem(rs.getInt(1) + " - " + rs.getString(2));
             }
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal load instruktur: " + e.getMessage());
         }
     }
 
-    // Menghasilkan ID kelas otomatis berdasarkan MAX(id)
     public void generateID() {
         try {
             pst = conn.prepareStatement("SELECT MAX(id_kelas) FROM jadwal_kelas");
             rs = pst.executeQuery();
+
             if (rs.next() && rs.getString(1) != null) {
-                txtID.setText(String.valueOf(Integer.parseInt(rs.getString(1)) + 1));
+                txtID.setText(String.valueOf(rs.getInt(1) + 1));
             } else {
                 txtID.setText("1");
             }
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal generate ID!");
         }
     }
 
-    // Menyimpan data ke database
     public void simpanData() {
 
-        // Validasi format jam
         if (!validJam(txtJam.getText())) {
-            JOptionPane.showMessageDialog(this, "Format jam harus HH:mm");
+            JOptionPane.showMessageDialog(this, "Format jam salah! Contoh: 15:30");
             return;
         }
 
         try {
             pst = conn.prepareStatement(
-                    "INSERT INTO jadwal_kelas (nama_kelas, hari, jam_kelas, id_instruktur) " +
-                            "VALUES (?, ?, ?, ?) RETURNING id_kelas"
+                "INSERT INTO jadwal_kelas (nama_kelas, hari, jam_kelas, id_instruktur) " +
+                "VALUES (?, ?, ?, ?) RETURNING id_kelas"
             );
 
             pst.setString(1, txtNama.getText());
@@ -171,7 +211,7 @@ public class FormJadwalKelas extends JFrame {
             pst.setInt(4, getSelectedInstrukturID());
 
             rs = pst.executeQuery();
-            if (rs.next()) txtID.setText(rs.getString("id_kelas"));
+            if (rs.next()) txtID.setText(rs.getString(1));
 
             JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
             tampilData();
@@ -182,11 +222,10 @@ public class FormJadwalKelas extends JFrame {
         }
     }
 
-    // Mengupdate data jadwal kelas
     public void updateData() {
         try {
             pst = conn.prepareStatement(
-                    "UPDATE jadwal_kelas SET nama_kelas=?, hari=?, jam_kelas=?, id_instruktur=? WHERE id_kelas=?"
+                "UPDATE jadwal_kelas SET nama_kelas=?, hari=?, jam_kelas=?, id_instruktur=? WHERE id_kelas=?"
             );
 
             pst.setString(1, txtNama.getText());
@@ -197,7 +236,7 @@ public class FormJadwalKelas extends JFrame {
 
             pst.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "Data diupdate!");
+            JOptionPane.showMessageDialog(this, "Data berhasil diupdate!");
             tampilData();
             resetForm();
 
@@ -206,14 +245,13 @@ public class FormJadwalKelas extends JFrame {
         }
     }
 
-    // Menghapus data berdasarkan ID
     public void hapusData() {
         try {
             pst = conn.prepareStatement("DELETE FROM jadwal_kelas WHERE id_kelas=?");
             pst.setInt(1, Integer.parseInt(txtID.getText()));
             pst.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "Data dihapus!");
+            JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
             tampilData();
             resetForm();
 
@@ -222,22 +260,21 @@ public class FormJadwalKelas extends JFrame {
         }
     }
 
-    // Menampilkan seluruh data tabel dari database
     public void tampilData() {
         model.setRowCount(0);
 
         try {
             pst = conn.prepareStatement(
-                    "SELECT jk.id_kelas, jk.nama_kelas, jk.hari, jk.jam_kelas, ig.nama AS instruktur " +
-                            "FROM jadwal_kelas jk " +
-                            "LEFT JOIN instruktur_gym ig ON jk.id_instruktur = ig.id_instruktur " +
-                            "ORDER BY jk.id_kelas ASC");
+                "SELECT jk.id_kelas, jk.nama_kelas, jk.hari, jk.jam_kelas, ig.nama AS instruktur " +
+                "FROM jadwal_kelas jk LEFT JOIN instruktur_gym ig " +
+                "ON jk.id_instruktur = ig.id_instruktur ORDER BY jk.id_kelas ASC"
+            );
 
             rs = pst.executeQuery();
 
             while (rs.next()) {
                 model.addRow(new Object[]{
-                        rs.getString("id_kelas"),
+                        rs.getInt("id_kelas"),
                         rs.getString("nama_kelas"),
                         rs.getString("hari"),
                         rs.getString("jam_kelas"),
@@ -250,7 +287,6 @@ public class FormJadwalKelas extends JFrame {
         }
     }
 
-    // Mengisi form dari baris tabel yang dipilih
     public void isiForm() {
         int row = table.getSelectedRow();
         if (row != -1) {
@@ -261,7 +297,6 @@ public class FormJadwalKelas extends JFrame {
         }
     }
 
-    // Reset form input
     public void resetForm() {
         txtNama.setText("");
         txtJam.setText("");
@@ -269,7 +304,6 @@ public class FormJadwalKelas extends JFrame {
         generateID();
     }
 
-    // Menjalankan aplikasi
     public static void main(String[] args) {
         new FormJadwalKelas().setVisible(true);
     }

@@ -13,14 +13,16 @@ public class FormInstruktur extends JFrame {
     private JTextField txtId, txtNama, txtUsia, txtKeahlian, txtTelp, txtCari;
     private JTable table;
     private DefaultTableModel model;
+    private JLabel lblTotal;
 
     public FormInstruktur() {
         setTitle("Form Data Instruktur Gym - PostgreSQL");
         setSize(760, 540);
         setLayout(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        // ============================= LABEL =============================
+        // LABEL
         JLabel lblId = new JLabel("ID Instruktur");
         JLabel lblNama = new JLabel("Nama");
         JLabel lblUsia = new JLabel("Usia");
@@ -36,7 +38,7 @@ public class FormInstruktur extends JFrame {
         add(lblId); add(lblNama); add(lblUsia);
         add(lblKeahlian); add(lblTelp);
 
-        // ============================= TEXT FIELD =============================
+        // TEXT FIELD
         txtId = new JTextField(); txtId.setEditable(false);
         txtNama = new JTextField();
         txtUsia = new JTextField();
@@ -54,7 +56,7 @@ public class FormInstruktur extends JFrame {
         add(txtId); add(txtNama); add(txtUsia);
         add(txtKeahlian); add(txtTelp); add(txtCari);
 
-        // ============================= BUTTONS =============================
+        // BUTTONS
         JButton btnSimpan  = new JButton("Simpan");
         JButton btnUpdate  = new JButton("Update");
         JButton btnDelete  = new JButton("Delete");
@@ -72,7 +74,7 @@ public class FormInstruktur extends JFrame {
         add(btnSimpan); add(btnUpdate); add(btnDelete);
         add(btnReset); add(btnCari); add(btnRefresh);
 
-        // ============================= TABLE =============================
+        // TABLE
         model = new DefaultTableModel(new String[]{"ID", "Nama", "Usia", "Keahlian", "No Telp"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -85,44 +87,48 @@ public class FormInstruktur extends JFrame {
         sp.setBounds(20, 260, 700, 220);
         add(sp);
 
-        // ============================= KONEKSI & LOAD =============================
+        // Label total data
+        lblTotal = new JLabel("Total Data: 0");
+        lblTotal.setBounds(20, 485, 200, 25);
+        add(lblTotal);
+
+        // KONEKSI & LOAD
         koneksiDB();
         tampilData();
 
-        // ============================= EVENT =============================
+        // EVENT
         btnSimpan.addActionListener(e -> simpanData());
         btnUpdate.addActionListener(e -> updateData());
         btnDelete.addActionListener(e -> deleteData());
         btnReset.addActionListener(e -> resetForm());
         btnCari.addActionListener(e -> cariData());
-        btnRefresh.addActionListener(e -> tampilData());
+        btnRefresh.addActionListener(e -> { resetForm(); tampilData(); });
 
         table.getSelectionModel().addListSelectionListener(e -> tableKlik());
     }
 
-    // ========================================================================
     // KONEKSI POSTGRESQL
-    // ========================================================================
     public void koneksiDB() {
         try {
             conn = DriverManager.getConnection(
                 "jdbc:postgresql://localhost:5432/relasi_gym",
                 "postgres",
-                "12345" 
+                "12345"
             );
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Koneksi Gagal: " + e.getMessage());
         }
     }
 
-    // ========================================================================
     // TAMPIL DATA
-    // ========================================================================
     public void tampilData() {
         model.setRowCount(0);
         try {
             pst = conn.prepareStatement("SELECT * FROM instruktur_gym ORDER BY id_instruktur ASC");
             rs = pst.executeQuery();
+
+            int count = 0;
+
             while (rs.next()) {
                 model.addRow(new Object[]{
                     rs.getInt("id_instruktur"),
@@ -131,15 +137,17 @@ public class FormInstruktur extends JFrame {
                     rs.getString("keahlian"),
                     rs.getString("no_telp")
                 });
+                count++;
             }
+
+            lblTotal.setText("Total Data: " + count);
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal Tampil: " + e.getMessage());
         }
     }
 
-    // ========================================================================
     // SIMPAN DATA
-    // ========================================================================
     public void simpanData() {
 
         if (txtNama.getText().isEmpty() || txtUsia.getText().isEmpty()) {
@@ -172,9 +180,7 @@ public class FormInstruktur extends JFrame {
         }
     }
 
-    // ========================================================================
     // UPDATE DATA
-    // ========================================================================
     public void updateData() {
         if (txtId.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Pilih data dari tabel!");
@@ -203,9 +209,7 @@ public class FormInstruktur extends JFrame {
         }
     }
 
-    // ========================================================================
     // DELETE DATA
-    // ========================================================================
     public void deleteData() {
         if (txtId.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Pilih data terlebih dahulu!");
@@ -226,16 +230,22 @@ public class FormInstruktur extends JFrame {
         }
     }
 
-    // ========================================================================
     // CARI DATA
-    // ========================================================================
     public void cariData() {
+
+        if (txtCari.getText().trim().isEmpty()) {
+            tampilData();
+            return;
+        }
+
         model.setRowCount(0);
 
         try {
             pst = conn.prepareStatement("SELECT * FROM instruktur_gym WHERE nama ILIKE ?");
             pst.setString(1, "%" + txtCari.getText() + "%");
             rs = pst.executeQuery();
+
+            int count = 0;
 
             while (rs.next()) {
                 model.addRow(new Object[]{
@@ -245,16 +255,17 @@ public class FormInstruktur extends JFrame {
                     rs.getString("keahlian"),
                     rs.getString("no_telp")
                 });
+                count++;
             }
+
+            lblTotal.setText("Total Data: " + count);
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal Cari Data: " + e.getMessage());
         }
     }
 
-    // ========================================================================
     // RESET FORM
-    // ========================================================================
     public void resetForm() {
         txtId.setText("");
         txtNama.setText("");
@@ -264,9 +275,7 @@ public class FormInstruktur extends JFrame {
         txtCari.setText("");
     }
 
-    // ========================================================================
     // KLIK TABEL
-    // ========================================================================
     public void tableKlik() {
         int row = table.getSelectedRow();
         if (row != -1) {
