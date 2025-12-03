@@ -1,13 +1,12 @@
 package src;
 
-import java.awt.event.*;
 import java.sql.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 public class FormRegistrasiMember extends JFrame {
 
-   public FormRegistrasiMember() {
+    public FormRegistrasiMember() {
 
         setTitle("Form Registrasi Member Gym");
         setSize(520, 660);
@@ -110,19 +109,19 @@ public class FormRegistrasiMember extends JFrame {
         Runnable tampilData = () -> {
             model.setRowCount(0);
             try {
-                PreparedStatement pst =
-                        conn.prepareStatement("SELECT * FROM member_gym ORDER BY id_member ASC");
+                PreparedStatement pst
+                        = conn.prepareStatement("SELECT * FROM member_gym ORDER BY id_member ASC");
 
                 ResultSet rs = pst.executeQuery();
 
                 int count = 0;
                 while (rs.next()) {
                     model.addRow(new Object[]{
-                            rs.getInt("id_member"),
-                            rs.getString("nama"),
-                            rs.getInt("usia"),
-                            rs.getString("alamat"),
-                            rs.getString("no_telp")
+                        rs.getInt("id_member"),
+                        rs.getString("nama"),
+                        rs.getInt("usia"),
+                        rs.getString("alamat"),
+                        rs.getString("no_telp")
                     });
                     count++;
                 }
@@ -133,7 +132,6 @@ public class FormRegistrasiMember extends JFrame {
             }
         };
 
-
         // EVENT SIMPAN
         btnSimpan.addActionListener(e -> {
             String nama = txtNama.getText().trim();
@@ -141,6 +139,7 @@ public class FormRegistrasiMember extends JFrame {
             String alamat = txtAlamat.getText().trim();
             String no_telp = txtTelp.getText().trim();
 
+            // validasi nama
             if (nama.isEmpty() || usiaStr.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Nama dan usia wajib diisi!", "Error",
                         JOptionPane.ERROR_MESSAGE);
@@ -156,17 +155,41 @@ public class FormRegistrasiMember extends JFrame {
                 try {
                     usia = Integer.parseInt(usiaStr);
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this,"Usia harus berupa angka!", "Error",
+                    JOptionPane.showMessageDialog(this, "Usia harus berupa angka!", "Error",
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 // validasi usia tidak boleh 0 atau negatif
                 if (usia <= 0) {
-                    JOptionPane.showMessageDialog(this, "Usia harus lebih dari 0!","Error",
+                    JOptionPane.showMessageDialog(this, "Usia harus lebih dari 0!", "Error",
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
+
+                // validasi no telp
+                if (!no_telp.matches("\\d+")) {
+                    JOptionPane.showMessageDialog(this, "No. Telp harus angka!");
+                    return;
+                }
+                if (no_telp.length() < 10) {
+                    JOptionPane.showMessageDialog(this, "No. Telp minimal 10 digit!");
+                    return;
+                }
+
+                // validasi no telp yang double
+                PreparedStatement cekTelp = conn.prepareStatement(
+                        "SELECT COUNT(*) FROM member_gym WHERE no_telp=?"
+                );
+                cekTelp.setString(1, no_telp);
+                ResultSet rsTelp = cekTelp.executeQuery();
+                rsTelp.next();
+
+                if (rsTelp.getInt(1) > 0) {
+                    JOptionPane.showMessageDialog(this, "No. Telp sudah terdaftar!");
+                    return;
+                }
+
                 pst.setString(1, nama);
                 pst.setInt(2, usia);
                 pst.setString(3, alamat);
@@ -215,7 +238,9 @@ public class FormRegistrasiMember extends JFrame {
                     JOptionPane.YES_NO_OPTION
             );
 
-            if (confirm != JOptionPane.YES_OPTION) return;
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
+            }
 
             try {
                 PreparedStatement pst = conn.prepareStatement(
@@ -245,7 +270,7 @@ public class FormRegistrasiMember extends JFrame {
         });
 
         // Load data SETELAH frame tampil agar tidak lama membuka form
-        this.setLocationRelativeTo(null);  
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
 
         SwingUtilities.invokeLater(tampilData);

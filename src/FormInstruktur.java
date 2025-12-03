@@ -35,11 +35,15 @@ public class FormInstruktur extends JFrame {
         lblKeahlian.setBounds(20, 140, 150, 25);
         lblTelp.setBounds(20, 180, 150, 25);
 
-        add(lblId); add(lblNama); add(lblUsia);
-        add(lblKeahlian); add(lblTelp);
+        add(lblId);
+        add(lblNama);
+        add(lblUsia);
+        add(lblKeahlian);
+        add(lblTelp);
 
         // TEXT FIELD
-        txtId = new JTextField(); txtId.setEditable(false);
+        txtId = new JTextField();
+        txtId.setEditable(false);
         txtNama = new JTextField();
         txtUsia = new JTextField();
         txtKeahlian = new JTextField();
@@ -53,15 +57,19 @@ public class FormInstruktur extends JFrame {
         txtTelp.setBounds(180, 180, 200, 25);
         txtCari.setBounds(20, 220, 200, 25);
 
-        add(txtId); add(txtNama); add(txtUsia);
-        add(txtKeahlian); add(txtTelp); add(txtCari);
+        add(txtId);
+        add(txtNama);
+        add(txtUsia);
+        add(txtKeahlian);
+        add(txtTelp);
+        add(txtCari);
 
         // BUTTONS
-        JButton btnSimpan  = new JButton("Simpan");
-        JButton btnUpdate  = new JButton("Update");
-        JButton btnDelete  = new JButton("Delete");
-        JButton btnReset   = new JButton("Reset");
-        JButton btnCari    = new JButton("Cari");
+        JButton btnSimpan = new JButton("Simpan");
+        JButton btnUpdate = new JButton("Update");
+        JButton btnDelete = new JButton("Delete");
+        JButton btnReset = new JButton("Reset");
+        JButton btnCari = new JButton("Cari");
         JButton btnRefresh = new JButton("Refresh");
 
         btnSimpan.setBounds(420, 20, 120, 30);
@@ -71,8 +79,12 @@ public class FormInstruktur extends JFrame {
         btnCari.setBounds(230, 220, 80, 25);
         btnRefresh.setBounds(320, 220, 90, 25);
 
-        add(btnSimpan); add(btnUpdate); add(btnDelete);
-        add(btnReset); add(btnCari); add(btnRefresh);
+        add(btnSimpan);
+        add(btnUpdate);
+        add(btnDelete);
+        add(btnReset);
+        add(btnCari);
+        add(btnRefresh);
 
         // TABLE
         model = new DefaultTableModel(new String[]{"ID", "Nama", "Usia", "Keahlian", "No Telp"}, 0) {
@@ -102,7 +114,10 @@ public class FormInstruktur extends JFrame {
         btnDelete.addActionListener(e -> deleteData());
         btnReset.addActionListener(e -> resetForm());
         btnCari.addActionListener(e -> cariData());
-        btnRefresh.addActionListener(e -> { resetForm(); tampilData(); });
+        btnRefresh.addActionListener(e -> {
+            resetForm();
+            tampilData();
+        });
 
         table.getSelectionModel().addListSelectionListener(e -> tableKlik());
     }
@@ -111,9 +126,9 @@ public class FormInstruktur extends JFrame {
     public void koneksiDB() {
         try {
             conn = DriverManager.getConnection(
-                "jdbc:postgresql://localhost:5432/relasi_gym",
-                "postgres",
-                "12345"
+                    "jdbc:postgresql://localhost:5432/relasi_gym",
+                    "postgres",
+                    "12345"
             );
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Koneksi Gagal: " + e.getMessage());
@@ -149,20 +164,40 @@ public class FormInstruktur extends JFrame {
 
     // SIMPAN DATA
     public void simpanData() {
-
+        // validasi nama dan usia tidak boleh kosong
         if (txtNama.getText().isEmpty() || txtUsia.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Nama dan Usia wajib diisi!");
             return;
         }
 
+        //validasi usia 
         if (!txtUsia.getText().matches("\\d+")) {
             JOptionPane.showMessageDialog(this, "Usia harus angka!");
             return;
         }
 
+        int usia = Integer.parseInt(txtUsia.getText());
+        if (usia <= 0) {
+            JOptionPane.showMessageDialog(this, "Usia harus lebih dari 0!");
+            return;
+        }
+
+        // validasi no telp
+        String telp = txtTelp.getText().trim();
+
+        if (!telp.matches("\\d+")) {
+            JOptionPane.showMessageDialog(this, "No. Telp harus angka!");
+            return;
+        }
+
+        if (telp.length() < 10) {
+            JOptionPane.showMessageDialog(this, "No. Telp minimal 10 digit!");
+            return;
+        }
+
         try {
             pst = conn.prepareStatement(
-                "INSERT INTO instruktur_gym (nama, usia, keahlian, no_telp) VALUES (?, ?, ?, ?)"
+                    "INSERT INTO instruktur_gym (nama, usia, keahlian, no_telp) VALUES (?, ?, ?, ?)"
             );
 
             pst.setString(1, txtNama.getText());
@@ -189,7 +224,7 @@ public class FormInstruktur extends JFrame {
 
         try {
             pst = conn.prepareStatement(
-                "UPDATE instruktur_gym SET nama=?, usia=?, keahlian=?, no_telp=? WHERE id_instruktur=?"
+                    "UPDATE instruktur_gym SET nama=?, usia=?, keahlian=?, no_telp=? WHERE id_instruktur=?"
             );
 
             pst.setString(1, txtNama.getText());
