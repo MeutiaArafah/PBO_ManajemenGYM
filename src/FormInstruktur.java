@@ -164,38 +164,57 @@ public class FormInstruktur extends JFrame {
 
     // SIMPAN DATA
     public void simpanData() {
+        String nama = txtNama.getText().trim();
+        String usiaStr = txtUsia.getText().trim();
+        String keahlian = txtKeahlian.getText().trim();
+        String no_telp = txtTelp.getText().trim();
+
         // validasi nama dan usia tidak boleh kosong
-        if (txtNama.getText().isEmpty() || txtUsia.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nama dan Usia wajib diisi!");
+        if (txtNama.getText().isEmpty() || txtUsia.getText().isEmpty() |txtKeahlian.getText().isEmpty() || txtTelp.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Semua kolom wajib diisi!");
             return;
         }
 
         //validasi usia 
-        if (!txtUsia.getText().matches("\\d+")) {
-            JOptionPane.showMessageDialog(this, "Usia harus angka!");
+        int usia;
+        try {
+            usia = Integer.parseInt(usiaStr);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Usia harus berupa angka!", "Error",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        int usia = Integer.parseInt(txtUsia.getText());
+        // validasi usia tidak boleh 0 atau negatif
         if (usia <= 0) {
-            JOptionPane.showMessageDialog(this, "Usia harus lebih dari 0!");
+            JOptionPane.showMessageDialog(this, "Usia harus lebih dari 0!", "Error",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         // validasi no telp
-        String telp = txtTelp.getText().trim();
-
-        if (!telp.matches("\\d+")) {
+        if (!no_telp.matches("\\d+")) {
             JOptionPane.showMessageDialog(this, "No. Telp harus angka!");
             return;
         }
-
-        if (telp.length() < 10) {
+        if (no_telp.length() < 10) {
             JOptionPane.showMessageDialog(this, "No. Telp minimal 10 digit!");
             return;
         }
 
         try {
+            // validasi no telp yang double
+            PreparedStatement cekTelp = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM instruktur_gym WHERE no_telp=?"
+            );
+            cekTelp.setString(1, no_telp);
+            ResultSet rsTelp = cekTelp.executeQuery();
+            rsTelp.next();
+
+            if (rsTelp.getInt(1) > 0) {
+                JOptionPane.showMessageDialog(this, "No. Telp sudah terdaftar!");
+                return;
+            }
+
             pst = conn.prepareStatement(
                     "INSERT INTO instruktur_gym (nama, usia, keahlian, no_telp) VALUES (?, ?, ?, ?)"
             );

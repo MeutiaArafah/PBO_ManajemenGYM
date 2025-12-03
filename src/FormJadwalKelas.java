@@ -196,8 +196,8 @@ public class FormJadwalKelas extends JFrame {
     public void simpanData() {
 
         // validasi nama kelas 
-        if (txtNama.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nama kelas wajib diisi!");
+        if (txtNama.getText().isEmpty() || txtJam.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Semua kolom wajib diisi!");
             return;
         }
 

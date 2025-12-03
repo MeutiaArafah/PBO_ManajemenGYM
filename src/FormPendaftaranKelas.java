@@ -239,17 +239,6 @@ public class FormPendaftaranKelas extends JFrame {
             return;
         }
 
-        // validasi memilih kelas dan member 
-        if (cbMember.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Member harus dipilih!");
-            return;
-        }
-
-        if (cbKelas.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Kelas harus dipilih!");
-            return;
-        }
-
         try {
             java.sql.Date.valueOf(txtTanggalDaftar.getText());
         } catch (Exception ex) {

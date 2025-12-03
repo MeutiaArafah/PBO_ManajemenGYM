@@ -139,9 +139,9 @@ public class FormRegistrasiMember extends JFrame {
             String alamat = txtAlamat.getText().trim();
             String no_telp = txtTelp.getText().trim();
 
-            // validasi nama
-            if (nama.isEmpty() || usiaStr.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Nama dan usia wajib diisi!", "Error",
+            // validasi semua input harus diisi
+            if (nama.isEmpty() || usiaStr.isEmpty() || alamat.isEmpty() || no_telp.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Semua kolom wajib diisi!", "Error",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
